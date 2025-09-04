@@ -15,8 +15,9 @@ from dataset import Principle
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import ipdb
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6,7"
 
 random.seed(42)
 np.random.seed(42)
@@ -54,7 +55,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--max_new_tokens",
                         type=int,
-                        default=512)
+                        default=128)
 
     parser.add_argument("--output_data_file",
                         type=str,
@@ -95,16 +96,17 @@ if __name__ == '__main__':
     }
 
     print("Loading dataset !", flush=True)
-    raw_dataset = datasets.load_dataset("/private/home/zhumingye/data/data/hh-rlhf", split='test')
+    # raw_dataset = datasets.load_dataset("/private/home/zhumingye/data/data/hh-rlhf", split='test')
+    raw_dataset = datasets.load_dataset("json", data_files = "/home/shiweiye/zhaowei/LatentSeek/datas/personal_preference_eval_preference_data.json")["train"]
 
     shuffled_dataset = raw_dataset.shuffle(seed=42)
 
-    sampled_dataset = shuffled_dataset.select(range(args.data_size))
+    sampled_dataset = shuffled_dataset.select(range(10))#.select(range(args.data_size))
 
     del raw_dataset, shuffled_dataset
     print('Dataset loaded !', flush=True)
 
-    if "qwen" in model_path:
+    if "qwen" in model_path or "Qwen" in model_path:
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, pad_token='<|im_end|>',
                                                   eos_token='<|im_end|>')
     else:
@@ -119,8 +121,10 @@ if __name__ == '__main__':
     model = model.eval()
     print('Model loaded!')
 
-    selected_data = CDDataset(sampled_dataset, principle=principle, conv_adapter=conv_adapter)
 
+    
+    selected_data = CDDataset(sampled_dataset, principle=principle, conv_adapter=conv_adapter)
+    # ipdb.set_trace()
 
  
     sampled_dataset.to_json(args.output_data_file)
@@ -136,14 +140,18 @@ if __name__ == '__main__':
     ids3 = inputs3['input_ids']
     att3 = inputs3['attention_mask']
 
-
-    for index, i in tqdm(enumerate(selected_data)):
+    # ipdb.set_trace()
+    
+    for index, i in tqdm(enumerate(selected_data.dataset)):
         print(f"index:{index}", flush=True)
 
-        principle_text = i["dialogue_text_principle"]
-        no_principle_text = i["dialogue_text"]
+        # principle_text = i["dialogue_text_principle"]
+        # no_principle_text = i["dialogue_text"]
+        # ipdb.set_trace()
+        principle_text = i["question"] + " Your answer should be as creative as possible."
+        no_principle_text = i["question"]
         question = i['question']
-        chosen_answer = i["chosen_answer"]
+        # chosen_answer = i["chosen_answer"]
         
         inputs1 = tokenizer(principle_text, return_tensors='pt') ####for likelihood
         ids1 = inputs1['input_ids']
@@ -237,6 +245,7 @@ if __name__ == '__main__':
 
         data_points = {
             "id": index,
+            "question": no_principle_text,
             "inputs": principle_text,
             "principal": principle,
             "sft_output": sft_output,
