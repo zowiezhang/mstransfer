@@ -37,6 +37,10 @@ if __name__ == '__main__':
                         type=str,
                         default="llama2")
 
+    parser.add_argument("--pref_prompt",
+                        type=str,
+                        default="Your answer should be creative as much as possible.")
+
     parser.add_argument("--data_path",
                         type=str,
                         default='Anthropic/hh-rlhf')
@@ -150,7 +154,7 @@ if __name__ == '__main__':
         # principle_text = i["dialogue_text_principle"]
         # no_principle_text = i["dialogue_text"]
         # ipdb.set_trace()
-        principle_text = i["question"] + " Your answer should be as creative as possible."
+        principle_text = i["question"] + ' ' + args.pref_prompt
         no_principle_text = i["question"]
         question = i['question']
         # chosen_answer = i["chosen_answer"]
@@ -223,7 +227,7 @@ if __name__ == '__main__':
                     output_no = model(next_token_id.unsqueeze(-1),current_att_no,past_key_values=past_key_values_no,use_cache=True)
                     logits_no = output_no.logits
                     past_key_values_no=output_no.past_key_values
-                    log_prob_no = F.log_softmax(logits_no.mean(1),dim=-1)+F.log_softmax(logits_no_old.mean(1),dim=-1)
+                    log_prob_no =  F.log_softmax(logits_no.mean(1),dim=-1)+F.log_softmax(logits_no_old.mean(1),dim=-1)
 
                     next_token_logit = logits[:, -1, :]######
 

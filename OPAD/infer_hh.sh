@@ -13,11 +13,11 @@ mkdir -p $output_dir_log
 python \
   infer_hh.py \
   --conv_type llama2 \
-  --model_path /data/models/Qwen2.5-7B-Instruct \
+  --model_path /home/v-zhaowzhang/models/Qwen2.5-7B-Instruct \
   --principle_id $p_id \
   --temperature $t \
   --ratio $ratio \
   --data_size $dz \
   --output_data_file ${output_dir}/${model_name}_hh_data.json \
-  --output_result_file ${output_dir}/${model_name}_opad.json \
+  --output_result_file ${output_dir}/${model_name}_creative_opad.json \
   # &> ${output_dir_log}/${model_name}_opad.log 
